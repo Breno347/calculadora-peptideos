@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Reconstituição — Elite Metabólica</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181d23;
+    --border: #1e252e;
+    --accent: #00d4ff;
+    --accent2: #0099bb;
+    --text: #e8edf2;
+    --muted: #5a6472;
+    --muted2: #3a424e;
+    --green: #00e5a0;
+    --orange: #ff9040;
+    --red: #ff4f4f;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+min-height: 100vh;
+padding: 0 0 80px;
+}
+
+/* GRID BACKGROUND */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 0 20px; }
+
+/* HEADER */
+header {
+padding: 48px 0 40px;
+border-bottom: 1px solid var(–border);
+margin-bottom: 40px;
+}
+
+.brand {
+font-family: ‘Syne’, sans-serif;
+font-size: 11px;
+font-weight: 600;
+letter-spacing: 0.2em;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 12px;
+}
+
+h1 {
+font-family: ‘Syne’, sans-serif;
+font-size: clamp(28px, 6vw, 42px);
+font-weight: 800;
+line-height: 1.1;
+color: var(–text);
+margin-bottom: 10px;
+}
+
+h1 span { color: var(–accent); }
+
+.subtitle {
+font-size: 12px;
+color: var(–muted);
+letter-spacing: 0.05em;
+}
+
+/* SECTION */
+.section {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 28px;
+margin-bottom: 16px;
+position: relative;
+overflow: hidden;
+}
+
+.section::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: linear-gradient(90deg, var(–accent), transparent);
+}
+
+.section-label {
+font-family: ‘Syne’, sans-serif;
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.2em;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.section-label::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+/* FIELDS */
+.field-row {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 12px;
+margin-bottom: 12px;
+}
+
+.field-row.single { grid-template-columns: 1fr; }
+.field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.field {
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
+
+label {
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+
+input, select {
+background: var(–surface2);
+border: 1px solid var(–muted2);
+border-radius: 8px;
+padding: 11px 14px;
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+font-size: 14px;
+outline: none;
+transition: border-color 0.2s, box-shadow 0.2s;
+width: 100%;
+appearance: none;
+-webkit-appearance: none;
+}
+
+input:focus, select:focus {
+border-color: var(–accent);
+box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
+}
+
+input::placeholder { color: var(–muted2); }
+
+select {
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%235a6472’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 12px center;
+padding-right: 36px;
+cursor: pointer;
+}
+
+select option { background: var(–surface2); }
+
+/* UNIT BADGE */
+.input-with-unit {
+position: relative;
+}
+
+.input-with-unit input {
+padding-right: 52px;
+}
+
+.unit-badge {
+position: absolute;
+right: 12px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 0.05em;
+pointer-events: none;
+}
+
+/* RESULT GRID */
+.result-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-top: 4px;
+}
+
+.result-card {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 16px;
+position: relative;
+overflow: hidden;
+transition: border-color 0.3s;
+}
+
+.result-card.highlight {
+border-color: var(–accent);
+background: rgba(0,212,255,0.04);
+}
+
+.result-card.highlight::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: radial-gradient(circle at top left, rgba(0,212,255,0.06), transparent 70%);
+pointer-events: none;
+}
+
+.result-label {
+font-size: 9px;
+color: var(–muted);
+letter-spacing: 0.15em;
+text-transform: uppercase;
+margin-bottom: 6px;
+}
+
+.result-value {
+font-family: ‘Syne’, sans-serif;
+font-size: 22px;
+font-weight: 700;
+color: var(–text);
+letter-spacing: -0.02em;
+line-height: 1;
+}
+
+.result-card.highlight .result-value { color: var(–accent); }
+
+.result-unit {
+font-size: 11px;
+color: var(–muted);
+margin-top: 3px;
+font-family: ‘DM Mono’, monospace;
+font-weight: 300;
+}
+
+/* DOSE TABLE */
+.dose-table {
+width: 100%;
+border-collapse: collapse;
+font-size: 12px;
+margin-top: 4px;
+}
+
+.dose-table thead th {
+font-size: 9px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–muted);
+text-align: left;
+padding: 0 10px 10px;
+font-weight: 400;
+border-bottom: 1px solid var(–border);
+}
+
+.dose-table tbody tr {
+border-bottom: 1px solid var(–border);
+transition: background 0.15s;
+}
+
+.dose-table tbody tr:last-child { border-bottom: none; }
+.dose-table tbody tr:hover { background: var(–surface2); }
+
+.dose-table td {
+padding: 10px;
+color: var(–text);
+}
+
+.dose-table td:first-child { color: var(–muted); }
+
+.tag {
+display: inline-block;
+background: rgba(0,212,255,0.1);
+color: var(–accent);
+font-size: 10px;
+padding: 2px 8px;
+border-radius: 4px;
+border: 1px solid rgba(0,212,255,0.2);
+}
+
+.tag.green {
+background: rgba(0,229,160,0.1);
+color: var(–green);
+border-color: rgba(0,229,160,0.2);
+}
+
+/* SYRINGE VISUAL */
+.syringe-bar {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 16px;
+margin-top: 10px;
+}
+
+.syringe-label {
+font-size: 9px;
+color: var(–muted);
+letter-spacing: 0.15em;
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+
+.syringe-track {
+position: relative;
+height: 24px;
+background: var(–bg);
+border-radius: 6px;
+overflow: hidden;
+border: 1px solid var(–border);
+}
+
+.syringe-fill {
+height: 100%;
+background: linear-gradient(90deg, var(–accent2), var(–accent));
+border-radius: 6px;
+transition: width 0.5s cubic-bezier(.4,0,.2,1);
+min-width: 2px;
+position: relative;
+}
+
+.syringe-fill::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+}
+
+.syringe-ticks {
+display: flex;
+justify-content: space-between;
+margin-top: 5px;
+padding: 0 2px;
+}
+
+.syringe-ticks span {
+font-size: 9px;
+color: var(–muted2);
+}
+
+.syringe-annotation {
+font-size: 11px;
+color: var(–accent);
+text-align: center;
+margin-top: 6px;
+font-weight: 500;
+}
+
+/* INFO BOX */
+.info-box {
+background: rgba(0,212,255,0.04);
+border: 1px solid rgba(0,212,255,0.15);
+border-radius: 10px;
+padding: 14px 16px;
+font-size: 11px;
+color: var(–muted);
+line-height: 1.7;
+margin-top: 10px;
+}
+
+.info-box strong { color: var(–accent); font-weight: 500; }
+
+/* DIVIDER */
+.divider {
+height: 1px;
+background: var(–border);
+margin: 20px 0;
+}
+
+/* PRESETS */
+.preset-row {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 20px;
+}
+
+.preset-btn {
+background: var(–surface2);
+border: 1px solid var(–muted2);
+border-radius: 20px;
+padding: 6px 14px;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+color: var(–muted);
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.preset-btn:hover {
+border-color: var(–accent);
+color: var(–accent);
+background: rgba(0,212,255,0.05);
+}
+
+.preset-btn.active {
+border-color: var(–accent);
+color: var(–accent);
+background: rgba(0,212,255,0.08);
+}
+
+/* EMPTY STATE */
+.empty {
+text-align: center;
+padding: 30px;
+color: var(–muted2);
+font-size: 12px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+.field-row { grid-template-columns: 1fr; }
+.result-grid { grid-template-columns: 1fr; }
+.field-row.triple { grid-template-columns: 1fr 1fr; }
+}
+
+/* FOOTER */
+footer {
+text-align: center;
+padding-top: 40px;
+font-size: 10px;
+color: var(–muted2);
+letter-spacing: 0.1em;
+}
+
+footer span { color: var(–muted); }
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(8px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.section { animation: fadeIn 0.4s ease both; }
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.1s; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Elite Metabólica</div>
+    <h1>Calculadora de<br><span>Reconstituição</span></h1>
+    <div class="subtitle">// peptídeos & hormônios — diluição e dosagem</div>
+  </header>
+
+  <!-- PRESETS -->
+
+  <div class="section">
+    <div class="section-label">Pré-sets rápidos</div>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="applyPreset('bpc157')">BPC-157</button>
+      <button class="preset-btn" onclick="applyPreset('tb500')">TB-500</button>
+      <button class="preset-btn" onclick="applyPreset('igf1')">IGF-1 LR3</button>
+      <button class="preset-btn" onclick="applyPreset('ghrp6')">GHRP-6</button>
+      <button class="preset-btn" onclick="applyPreset('cjc1295')">CJC-1295</button>
+      <button class="preset-btn" onclick="applyPreset('ipamorelin')">Ipamorelin</button>
+      <button class="preset-btn" onclick="applyPreset('sema')">Semaglutida</button>
+      <button class="preset-btn" onclick="applyPreset('reta')">Retatrutida</button>
+    </div>
+
+```
+<!-- INPUT FIELDS -->
+<div class="field-row">
+  <div class="field">
+    <label>Nome do peptídeo</label>
+    <input type="text" id="peptideName" placeholder="ex: BPC-157">
+  </div>
+  <div class="field">
+    <label>Dose no frasco</label>
+    <div class="input-with-unit">
+      <input type="number" id="vialDose" placeholder="5" min="0.1" step="0.1">
+      <span class="unit-badge">mg</span>
+    </div>
+  </div>
+</div>
+
+<div class="field-row">
+  <div class="field">
+    <label>Diluente a adicionar</label>
+    <div class="input-with-unit">
+      <input type="number" id="bacteriostaticWater" placeholder="2" min="0.1" step="0.1" oninput="calculate()">
+      <span class="unit-badge">mL</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>Tipo de seringa</label>
+    <select id="syringeType" onchange="calculate()">
+      <option value="100">Insulina 100 UI</option>
+      <option value="50">Insulina 50 UI</option>
+      <option value="30">Insulina 30 UI</option>
+    </select>
+  </div>
+</div>
+
+<div class="field-row">
+  <div class="field">
+    <label>Dose desejada por aplicação</label>
+    <div class="input-with-unit">
+      <input type="number" id="desiredDose" placeholder="250" min="1" step="1" oninput="calculate()">
+      <span class="unit-badge" id="doseUnit">mcg</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>Unidade da dose</label>
+    <select id="doseUnitSelect" onchange="updateDoseUnit(); calculate()">
+      <option value="mcg">mcg (microgramas)</option>
+      <option value="mg">mg (miligramas)</option>
+      <option value="iu">UI (unidades)</option>
+    </select>
+  </div>
+</div>
+
+<div id="fieldVialDoseEvents">
+  <input type="hidden" id="vialDoseListener">
+</div>
+```
+
+  </div>
+
+  <!-- RESULTS -->
+
+  <div class="section" id="resultsSection">
+    <div class="section-label">Resultados da reconstituição</div>
+    <div id="resultsContent">
+      <div class="empty">Preencha os dados acima para ver os resultados</div>
+    </div>
+  </div>
+
+  <!-- DOSE TABLE -->
+
+  <div class="section" id="doseSection">
+    <div class="section-label">Tabela de doses de referência</div>
+    <div id="doseTableContent">
+      <div class="empty">Preencha os dados acima para ver as doses</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Elite Metabólica</span> — uso exclusivo para alunos sob protocolo supervisionado
+  </footer>
+
+</div>
+
+<script>
+  const presets = {
+    bpc157:     { name: 'BPC-157',     dose: 5,   water: 2,   desiredDose: 250,  unit: 'mcg' },
+    tb500:      { name: 'TB-500',      dose: 5,   water: 2,   desiredDose: 2.5,  unit: 'mg'  },
+    igf1:       { name: 'IGF-1 LR3',   dose: 1,   water: 1,   desiredDose: 50,   unit: 'mcg' },
+    ghrp6:      { name: 'GHRP-6',      dose: 5,   water: 2,   desiredDose: 100,  unit: 'mcg' },
+    cjc1295:    { name: 'CJC-1295',    dose: 2,   water: 2,   desiredDose: 100,  unit: 'mcg' },
+    ipamorelin: { name: 'Ipamorelin',  dose: 2,   water: 2,   desiredDose: 200,  unit: 'mcg' },
+    sema:       { name: 'Semaglutida', dose: 3,   water: 1.5, desiredDose: 0.5,  unit: 'mg'  },
+    reta:       { name: 'Retatrutida', dose: 5,   water: 1,   desiredDose: 2,    unit: 'mg'  },
+  };
+
+  function applyPreset(key) {
+    const p = presets[key];
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('peptideName').value = p.name;
+    document.getElementById('vialDose').value = p.dose;
+    document.getElementById('bacteriostaticWater').value = p.water;
+    document.getElementById('desiredDose').value = p.desiredDose;
+    document.getElementById('doseUnitSelect').value = p.unit;
+    updateDoseUnit();
+    calculate();
+  }
+
+  function updateDoseUnit() {
+    const unit = document.getElementById('doseUnitSelect').value;
+    document.getElementById('doseUnit').textContent = unit;
+  }
+
+  // Auto-calculate on all inputs
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+
+  function calculate() {
+    const vialMg    = parseFloat(document.getElementById('vialDose').value);
+    const waterMl   = parseFloat(document.getElementById('bacteriostaticWater').value);
+    const desiredRaw = parseFloat(document.getElementById('desiredDose').value);
+    const unit      = document.getElementById('doseUnitSelect').value;
+    const syringeUI = parseInt(document.getElementById('syringeType').value);
+    const name      = document.getElementById('peptideName').value || 'Peptídeo';
+
+    if (!vialMg || !waterMl || !desiredRaw) {
+      resetOutputs();
+      return;
+    }
+
+    // Convert desired dose to mg
+    let desiredMg;
+    if (unit === 'mcg') desiredMg = desiredRaw / 1000;
+    else if (unit === 'mg') desiredMg = desiredRaw;
+    else desiredMg = desiredRaw / 1000; // UI treated as mcg approx
+
+    // Core math
+    const concMgPerMl  = vialMg / waterMl;          // mg/mL
+    const concMcgPerMl = concMgPerMl * 1000;         // mcg/mL
+    const concMcgPerUI = concMcgPerMl / syringeUI;  // mcg per UI mark
+    const mlPerDose    = desiredMg / concMgPerMl;    // mL needed per dose
+    const uiPerDose    = mlPerDose * syringeUI;      // UI marks on syringe
+    const totalDoses   = vialMg / desiredMg;
+
+    // Display
+    renderResults(name, {
+      concMgPerMl, concMcgPerMl, concMcgPerUI,
+      mlPerDose, uiPerDose, totalDoses,
+      vialMg, waterMl, desiredRaw, unit, syringeUI
+    });
+  }
+
+  function resetOutputs() {
+    document.getElementById('resultsContent').innerHTML = '<div class="empty">Preencha os dados acima para ver os resultados</div>';
+    document.getElementById('doseTableContent').innerHTML = '<div class="empty">Preencha os dados acima para ver as doses</div>';
+  }
+
+  function fmt(n, dec=2) {
+    return Number(n.toFixed(dec)).toLocaleString('pt-BR');
+  }
+
+  function renderResults(name, d) {
+    const { concMgPerMl, concMcgPerMl, concMcgPerUI, mlPerDose, uiPerDose, totalDoses, vialMg, waterMl, desiredRaw, unit, syringeUI } = d;
+
+    // Syringe fill %
+    const syringePct = Math.min((uiPerDose / syringeUI) * 100, 100);
+
+    // UI warning
+    const uiWarning = uiPerDose > syringeUI
+      ? `<div class="info-box">⚠️ <strong>Dose maior que a seringa.</strong> Divida em ${Math.ceil(uiPerDose/syringeUI)} aplicações ou use uma seringa maior.</div>`
+      : '';
+
+    document.getElementById('resultsContent').innerHTML = `
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="result-label">Aspirar na seringa</div>
+          <div class="result-value">${fmt(uiPerDose, 1)}</div>
+          <div class="result-unit">UI (marcação ${syringeUI} UI)</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Volume por dose</div>
+          <div class="result-value">${fmt(mlPerDose, 3)}</div>
+          <div class="result-unit">mL por aplicação</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Concentração</div>
+          <div class="result-value">${fmt(concMgPerMl, 2)}</div>
+          <div class="result-unit">mg/mL = ${fmt(concMcgPerMl, 0)} mcg/mL</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Doses totais no frasco</div>
+          <div class="result-value">${fmt(totalDoses, 0)}</div>
+          <div class="result-unit">aplicações de ${desiredRaw} ${unit}</div>
+        </div>
+      </div>
+
+      <div class="syringe-bar">
+        <div class="syringe-label">Visualização da seringa (${syringeUI} UI)</div>
+        <div class="syringe-track">
+          <div class="syringe-fill" style="width:${syringePct}%"></div>
+        </div>
+        <div class="syringe-ticks">
+          <span>0</span>
+          <span>${Math.round(syringeUI*0.25)}</span>
+          <span>${Math.round(syringeUI*0.5)}</span>
+          <span>${Math.round(syringeUI*0.75)}</span>
+          <span>${syringeUI}</span>
+        </div>
+        <div class="syringe-annotation">▲ ${fmt(uiPerDose, 1)} UI</div>
+      </div>
+
+      ${uiWarning}
+
+      <div class="info-box">
+        <strong>${name}</strong> — ${vialMg} mg reconstituído em ${waterMl} mL<br>
+        Cada UI na seringa = <strong>${fmt(concMcgPerUI, 2)} mcg</strong> (${fmt(concMcgPerUI/1000, 4)} mg)
+      </div>
+    `;
+
+    renderDoseTable(name, d);
+  }
+
+  function renderDoseTable(name, d) {
+    const { concMgPerMl, vialMg, unit, syringeUI } = d;
+
+    // Reference doses array
+    let doses = [];
+    if (unit === 'mcg') {
+      doses = [50, 100, 150, 200, 250, 300, 400, 500];
+    } else if (unit === 'mg') {
+      doses = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 5];
+    } else {
+      doses = [50, 100, 150, 200, 250, 300, 400, 500];
+    }
+
+    const rows = doses.map(dose => {
+      let doseMg = unit === 'mcg' ? dose/1000 : (unit === 'mg' ? dose : dose/1000);
+      const ml = doseMg / concMgPerMl;
+      const ui = ml * syringeUI;
+      const feasible = ui <= syringeUI;
+      return `
+        <tr>
+          <td>${dose} ${unit}</td>
+          <td>${fmt(ml, 3)} mL</td>
+          <td>${feasible ? `<span class="tag green">${fmt(ui, 1)} UI</span>` : `<span class="tag">${fmt(ui, 1)} UI ✗</span>`}</td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('doseTableContent').innerHTML = `
+      <table class="dose-table">
+        <thead>
+          <tr>
+            <th>Dose desejada</th>
+            <th>Volume (mL)</th>
+            <th>Marcação seringa</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="info-box" style="margin-top:12px">
+        Verde = cabe na seringa selecionada (${syringeUI} UI) &nbsp;·&nbsp; ✗ = necessita seringa maior
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
